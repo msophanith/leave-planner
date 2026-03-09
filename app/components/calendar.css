@@ -1,0 +1,190 @@
+/* Cute Calendar Global Styles */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cute-select-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 2px solid var(--cute-pink);
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 4px 0 var(--cute-pink);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  position: relative;
+}
+
+.cute-select-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--cute-pink);
+  border-color: var(--cute-pink-dark);
+}
+
+.cute-select-container:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--cute-pink);
+}
+
+.cute-select {
+  background: transparent;
+  border: none;
+  font-weight: 800;
+  cursor: pointer;
+  outline: none;
+  color: var(--cute-pink-dark);
+  appearance: none;
+  padding-right: 24px;
+  width: 100%;
+}
+
+.cute-select-arrow {
+  position: absolute;
+  right: 16px;
+  pointer-events: none;
+  color: var(--cute-pink);
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.cute-select-container:focus-within .cute-select-arrow {
+  transform: rotate(180deg);
+}
+
+.cute-lang-toggle {
+  background: white;
+  border: 2px solid var(--cute-blue);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 0 var(--cute-blue);
+}
+
+.cute-lang-toggle:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--cute-blue);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  pointer-events: none;
+  animation: shine 6s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 4s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Modal Premium styles - already in components but keeping here for reference if needed */
+.cute-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.3s ease-out;
+}
+
+.cute-modal-premium {
+  background: white;
+  border-radius: 40px;
+  border: 8px solid white;
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
+  width: 600px;
+  height: 320px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #fbcfe8;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f9a8d4;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #fbcfe8 transparent;
+}

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Nunito, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
 
@@ -24,7 +24,20 @@ const khmer = Kantumruy_Pro({
 
 export const metadata: Metadata = {
   title: "Holiday Buddy - Your Cute Holiday Calendar",
-  description: "A cute and feature-rich holiday calendar for Cambodia and beyond.",
+  description:
+    "A cute and feature-rich holiday calendar for Cambodia and beyond.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Holiday Buddy",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ffd6e0",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

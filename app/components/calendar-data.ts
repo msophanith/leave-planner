@@ -5,7 +5,16 @@ export interface HolidayEvent {
   theme: string;
   country: string;
   emoji: string;
-  type?: string;
+  /** e.g. "Public Holiday", "National holiday", "Observance" */
+  primaryType?: string;
+  /** All types from the API e.g. ["National holiday", "Public holiday"] */
+  types?: string[];
+  /** Description text from the API */
+  description?: string;
+  /** "All" or specific regions */
+  locations?: string;
+  /** Calendar URL on Calendarific */
+  canonicalUrl?: string;
 }
 
 export const KHMER_TRANSLATIONS: Record<string, string> = {

@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { calculateLeaveStrategies } from "./leave-calculator";
+import { downloadIcal } from "./ical-export";
 import { HolidayEvent } from "./calendar-data";
+import html2canvas from "html2canvas";
+import StrategyCard from "./strategy-card";
 
 interface LeavePlannerListProps {
   readonly lang: "en" | "km";
@@ -9,51 +12,6 @@ interface LeavePlannerListProps {
   readonly onClose: () => void;
 }
 
-const PALETTE = [
-  {
-    bg: "linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)",
-    dark: "#166534",
-    border: "#bbf7d0",
-    shadow: "#bcf0da",
-    emoji: "🎉",
-  },
-  {
-    bg: "linear-gradient(135deg, #fef9c3 0%, #fefce8 100%)",
-    dark: "#854d0e",
-    border: "#fef08a",
-    shadow: "#f1f4c7",
-    emoji: "✌️",
-  },
-  {
-    bg: "linear-gradient(135deg, #fce7f3 0%, #fdf2f8 100%)",
-    dark: "#9d174d",
-    border: "#fbcfe8",
-    shadow: "#f8d7e8",
-    emoji: "🌸",
-  },
-  {
-    bg: "linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)",
-    dark: "#92400e",
-    border: "#fde68a",
-    shadow: "#f7eab7",
-    emoji: "🌷",
-  },
-  {
-    bg: "linear-gradient(135deg, #ffedd5 0%, #fff7ed 100%)",
-    dark: "#9a3412",
-    border: "#fed7aa",
-    shadow: "#fbdcc1",
-    emoji: "🍑",
-  },
-  {
-    bg: "linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%)",
-    dark: "#6b21a8",
-    border: "#e9d5ff",
-    shadow: "#e2d1f7",
-    emoji: "🔮",
-  },
-];
-
 export default function LeavePlannerList({
   lang,
   year,
@@ -61,10 +19,12 @@ export default function LeavePlannerList({
   onClose,
 }: LeavePlannerListProps) {
   const [copied, setCopied] = useState<string | null>(null);
+  const [leaveAllowance, setLeaveAllowance] = useState(18);
+  const [exporting, setExporting] = useState(false);
 
   const strategies = useMemo(
-    () => calculateLeaveStrategies(year, events),
-    [year, events],
+    () => calculateLeaveStrategies(year, events, leaveAllowance),
+    [year, events, leaveAllowance],
   );
 
   const groupedStrategies = useMemo(() => {
@@ -95,8 +55,17 @@ export default function LeavePlannerList({
     );
     const efficiency =
       totalLeaveUsed > 0 ? (totalDaysOff / totalLeaveUsed).toFixed(1) : "0";
-    return { totalLeaveUsed, totalDaysOff, efficiency };
-  }, [strategies]);
+    const remaining = leaveAllowance - totalLeaveUsed;
+    return { totalLeaveUsed, totalDaysOff, efficiency, remaining };
+  }, [strategies, leaveAllowance]);
+
+  const handleExport = () => {
+    setExporting(true);
+    setTimeout(() => {
+      downloadIcal(strategies, year);
+      setExporting(false);
+    }, 400);
+  };
 
   const handleCopy = (dates: string[], id: string) => {
     const text = dates
@@ -113,36 +82,103 @@ export default function LeavePlannerList({
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const getDayOfWeek = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString(
-      lang === "km" ? "km-KH" : "en-US",
-      {
-        weekday: "short",
-      },
-    );
-  };
-
-  const getMonthAbbr = (dateStr: string) => {
-    return new Date(dateStr)
-      .toLocaleDateString(lang === "km" ? "km-KH" : "en-US", {
-        month: "short",
-      })
-      .toUpperCase();
-  };
-
-  const getDayOfMonth = (dateStr: string) => {
-    return new Date(dateStr).getDate();
-  };
-
   const formatDate = (dateStr: string, opts?: Intl.DateTimeFormatOptions) =>
     new Date(dateStr).toLocaleDateString(
       lang === "km" ? "km-KH" : "en-US",
       opts ?? { month: "short", day: "numeric" },
     );
 
+  const handleShare = async (e: React.MouseEvent, cardId: string) => {
+    e.stopPropagation();
+    try {
+      const element = globalThis.document.getElementById(
+        `strategy-card-${cardId}`,
+      );
+      if (!element) return;
+
+      const canvas = await html2canvas(element, {
+        backgroundColor: null,
+        scale: 2,
+        logging: false,
+        onclone: (clonedDoc) => {
+          const el = clonedDoc.getElementById(`strategy-card-${cardId}`);
+          if (el) {
+            // 🛑 DEEP COLOR SANITIZATION
+            // html2canvas crashes on lab(), oklch(), etc.
+            const allElements = el.querySelectorAll("*");
+            const sanitize = (val: string) => {
+              if (!val) return val;
+              const unsupported = ["lab(", "oklch(", "oklab(", "lch("];
+              if (unsupported.some((chunk) => val.includes(chunk))) {
+                return "#71717a"; // Safe gray fallback
+              }
+              return val;
+            };
+
+            for (const item of Array.from(allElements)) {
+              const htmlItem = item as HTMLElement;
+              const computed = globalThis.getComputedStyle(htmlItem);
+
+              const color = sanitize(computed.color);
+              if (color !== computed.color) {
+                htmlItem.style.setProperty("color", color, "important");
+              }
+
+              const bg = sanitize(computed.backgroundColor);
+              if (bg !== computed.backgroundColor) {
+                htmlItem.style.setProperty("background-color", bg, "important");
+              }
+
+              const border = sanitize(computed.borderColor);
+              if (border !== computed.borderColor) {
+                htmlItem.style.setProperty("border-color", border, "important");
+              }
+
+              const shadow = sanitize(computed.boxShadow);
+              if (shadow !== computed.boxShadow) {
+                htmlItem.style.setProperty("box-shadow", "none", "important");
+              }
+            }
+
+            // Hide action buttons in the clone
+            const actions = el.querySelectorAll(".wanderlust-actions");
+            for (const a of Array.from(actions)) {
+              (a as HTMLElement).style.display = "none";
+            }
+
+            // Remove animations
+            const animated = el.querySelectorAll(
+              ".animate-pulse, .animate-ping, .animate-bounce",
+            );
+            for (const a of Array.from(animated)) {
+              const h = a as HTMLElement;
+              h.style.animation = "none";
+              h.classList.remove(
+                "animate-pulse",
+                "animate-ping",
+                "animate-bounce",
+              );
+            }
+          }
+        },
+      });
+
+      const url = canvas.toDataURL("image/png");
+      const a = globalThis.document.createElement("a");
+      a.href = url;
+      a.download = `holiday-strategy-${cardId}.png`;
+      a.click();
+    } catch (err) {
+      console.error("Failed to generate image", err);
+    }
+  };
+
   return (
-    <div className="absolute inset-0 z-200 flex items-center justify-center p-4 sm:p-8 lg:p-12" style={{ padding: 16 }}>
-      {/* Backdrop: Native button for accessibility */}
+    <div
+      className="absolute inset-0 z-200 flex items-center justify-center p-4 sm:p-8 lg:p-12"
+      style={{ padding: 16 }}
+    >
+      {/* Backdrop */}
       <button
         type="button"
         className="absolute inset-0 w-full h-full bg-black/40 backdrop-blur-sm cursor-default border-none outline-none"
@@ -150,235 +186,178 @@ export default function LeavePlannerList({
         aria-label={lang === "km" ? "បិទ" : "Close"}
       />
 
-      <div className="relative w-full max-w-7xl max-h-[85vh] flex flex-col bg-white overflow-hidden font-nunito rounded-[40px] shadow-2xl" style={{ margin: '0 16px' }}>
-        {/* ── Top Bar ── */}
-        <div className="flex items-center justify-between px-8 sm:px-12 lg:px-16 py-6 border-b border-gray-100 shrink-0" style={{ padding: 16 }}>
+      <div
+        className="relative w-full max-w-7xl max-h-[85vh] flex flex-col overflow-hidden font-nunito bg-white shadow-2xl leave-planner-panel"
+        style={{ margin: "0 16px" }}
+      >
+        {/* Top Bar */}
+        <div
+          className="flex items-center justify-between shrink-0 leave-planner-topbar"
+          style={{ padding: 16 }}
+        >
           <div className="flex items-center gap-4">
             <span className="text-3xl">🤖</span>
-            <h2 className="text-xl font-black text-gray-800 tracking-tight">
-              {lang === "km" ? "ជំនួយការសម្រាកប្រចាំឆ្នាំ" : "AI Leave Assistant"}
-            </h2>
+            <div>
+              <h2
+                className="text-xl font-black tracking-tight"
+                style={{ color: "var(--text-main)" }}
+              >
+                {lang === "km"
+                  ? "ជំនួយការសម្រាកប្រចាំឆ្នាំ"
+                  : "AI Leave Assistant"}
+              </h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  {lang === "km" ? "ថ្ងៃ AL:" : "AL Budget:"}
+                </span>
+                <input
+                  type="range"
+                  min={5}
+                  max={30}
+                  value={leaveAllowance}
+                  onChange={(e) => setLeaveAllowance(Number(e.target.value))}
+                  className="w-20 accent-pink-400 cursor-pointer"
+                  aria-label="Annual leave allowance"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={leaveAllowance}
+                  onChange={(e) => {
+                    const v = Math.max(1, Math.min(60, Number(e.target.value)));
+                    setLeaveAllowance(v);
+                  }}
+                  className="w-12 text-center text-sm font-black text-pink-600 border-2 border-pink-200 outline-none focus:border-pink-400 transition-colors"
+                  aria-label="Annual leave days"
+                />
+                <span className="text-[11px] font-bold text-gray-400">
+                  {lang === "km" ? "ថ្ងៃ" : "days"}
+                </span>
+              </div>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors bg-red-400 text-white"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExport}
+              disabled={exporting || strategies.length === 0}
+              className="cute-export-btn"
+              title="Export to .ics calendar file"
+            >
+              {exporting ? "⏳" : "📅"}{" "}
+              {lang === "km" ? "នាំចេញ .ics" : "Export .ics"}
+            </button>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition-colors bg-red-400 text-white"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
-        {/* ── Scrollable Content ── */}
-        <div className="flex-1 overflow-y-auto px-8 sm:px-12 lg:px-16 py-8 space-y-12 custom-scrollbar" style={{ padding: 16 }}>
+        {/* Scrollable Content */}
+        <div
+          className="flex-1 overflow-y-auto space-y-12 custom-scrollbar leave-planner-scroll"
+          style={{ padding: 24 }}
+        >
           {Object.entries(groupedStrategies).map(
             ([monthYear, monthStrategies]) => (
-              <div key={monthYear} className="space-y-6" >
-                {/* Month Header - Pill style */}
-                <div className="inline-flex items-center gap-2 px-5 py-2 border-2 border-dashed border-pink-100 rounded-full bg-[#fff9fb]">
+              <div key={monthYear} className="space-y-6">
+                <div
+                  className="inline-flex items-center gap-2 px-5 py-2 border-2 border-dashed leave-planner-month-header"
+                  style={{ borderColor: "var(--cute-pink)" }}
+                >
                   <span className="text-sm font-black text-gray-700">
                     {monthYear} ✿
                   </span>
                 </div>
 
-                {/* Strategy Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-4">
-                  {monthStrategies.map((strategy, idx) => {
-                    const pal = PALETTE[idx % PALETTE.length];
-                    const cardId = `${strategy.startDate}-${strategy.endDate}`;
-                    const isCopied = copied === cardId;
-
-                    return (
-                      <div
-                        key={cardId}
-                        style={{ padding: '16px 0' }}
-                        className='relative group transition-all duration-500 hover:-translate-y-1.5 active:scale-[0.98]'
-                      >
-                        {/* Perspective Shadow */}
-                        <div
-                          className='absolute inset-x-2 -bottom-2 h-10 rounded-[40px] opacity-40 blur-xl transition-all group-hover:blur-2xl'
-                          style={{ backgroundColor: pal.shadow }}
-                        />
-
-                        {/* Main Card */}
-                        <button
-                          type='button'
-                          className='relative w-full p-4 rounded-[40px] flex items-center gap-6 cursor-pointer border-2 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] outline-none focus-visible:ring-4 focus-visible:ring-blue-400 group-active:scale-95 transition-all duration-300 text-left'
-                          style={{
-                            background: pal.bg,
-                            borderColor: pal.border,
-                          }}
-                          onClick={() =>
-                            handleCopy(strategy.leaveDates, cardId)
-                          }
-                        >
-                          {/* Inner Shine Effect */}
-                          <div
-                            className='absolute inset-0 bg-white/40 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700'
-                            style={{
-                              background:
-                                'linear-gradient(to bottom right, rgba(255,255,255,0.6) 0%, transparent 60%)',
-                            }}
-                          />
-
-                          {/* Left Date Pill */}
-                          <div
-                            style={{ padding: '16px 8px', marginLeft: 16 }}
-                            className='bg-white rounded-3xl flex flex-col items-center justify-center min-w-18 shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-gray-50 z-10'
-                          >
-                            <span className='text-[11px] font-black text-rose-400 uppercase tracking-widest leading-none mb-1.5'>
-                              {getMonthAbbr(strategy.startDate)}
-                            </span>
-                            <span className='text-3xl font-black text-gray-800 leading-none'>
-                              {getDayOfMonth(strategy.startDate)}
-                            </span>
-                          </div>
-
-                          {/* Info Section */}
-                          <div
-                            className='flex-1 min-w-0 z-10'
-                            style={{ padding: 8 }}
-                          >
-                            <h3
-                              className='text-[17px] font-black text-gray-800 leading-tight truncate mb-1.5 px-0.5'
-                              style={{ letterSpacing: '-0.01em' }}
-                            >
-                              {strategy.holidaysIncluded.join(' + ')}
-                            </h3>
-
-                            {/* Specific Leave Dates Section */}
-                            <div className='flex flex-wrap items-center gap-2 mb-2'>
-                              <span className='text-[10px] font-black text-red-500 uppercase tracking-widest'>
-                                Apply AL:
-                              </span>
-                              {strategy.leaveDates.map((date) => (
-                                <span
-                                  style={{ padding: 4 }}
-                                  key={date}
-                                  className='px-2 py-0.5 rounded-md bg-white/60 text-[10px] font-black text-gray-700 border border-white/40 shadow-sm'
-                                >
-                                  {formatDate(date, {
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })}
-                                </span>
-                              ))}
-                            </div>
-
-                            <p className='text-[11px] text-gray-500 font-medium mb-3 px-0.5 opacity-80 line-clamp-2'>
-                              {strategy.explanation}
-                            </p>
-
-                            <div className='flex flex-wrap items-center gap-x-3 gap-y-2'>
-                              <div className='flex items-center gap-1 opacity-70'>
-                                <span className='text-xs'>🌏</span>
-                                <p className='text-[11px] font-bold text-gray-500 uppercase tracking-tight'>
-                                  {lang === 'km'
-                                    ? 'ថ្ងៃឈប់សម្រាក'
-                                    : 'Public Holiday'}{' '}
-                                  • {getDayOfWeek(strategy.startDate)}
-                                </p>
-                              </div>
-                              <div className='flex items-center gap-2'>
-                                {/* Better Badges */}
-                                <div
-                                  style={{ padding: 4 }}
-                                  className='flex items-center gap-1 px-2.5 py-1 rounded-md bg-white/70 backdrop-blur-sm border border-white/80 shadow-sm'
-                                >
-                                  <span className='text-[11px] font-black text-blue-600 leading-none'>
-                                    {strategy.leaveDaysCount}d
-                                  </span>
-                                  <span className='text-[9px] font-bold text-gray-400 uppercase tracking-tighter'>
-                                    Leave
-                                  </span>
-                                </div>
-                                <div
-                                  style={{ padding: 4 }}
-                                  className='flex items-center gap-1 px-2.5 py-1 rounded-md bg-black/5 border border-black/5 shadow-inner'
-                                >
-                                  <span className='text-[11px] font-black text-gray-800 leading-none'>
-                                    {strategy.totalBreakDays}d
-                                  </span>
-                                  <span className='text-[9px] font-bold text-gray-400 uppercase tracking-tighter'>
-                                    Off
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Right Emoji */}
-                          <div className='text-4xl pr-2 filter transition-all duration-500 group-hover:scale-125 group-hover:rotate-12 z-10 drop-shadow-sm'>
-                            {pal.emoji}
-                          </div>
-
-                          {/* Copy Hint */}
-                          {isCopied && (
-                            <div className='absolute inset-0 bg-green-500/90 backdrop-blur-sm rounded-[40px] flex items-center justify-center animate-fade-in z-20'>
-                              <div className='flex items-center gap-2'>
-                                <span className='text-xl'>✅</span>
-                                <span className='text-white font-black text-sm tracking-widest uppercase'>
-                                  {lang === 'km' ? 'ចម្លងរួច!' : 'Copied!'}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </button>
-                      </div>
-                    );
-                  })}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {monthStrategies.map((strategy, idx) => (
+                    <StrategyCard
+                      key={`${strategy.startDate}-${strategy.endDate}`}
+                      strategy={strategy}
+                      idx={idx}
+                      lang={lang}
+                      onShare={handleShare}
+                      onCopy={handleCopy}
+                      isCopied={
+                        copied ===
+                        `${strategy.startDate.replaceAll(" ", "")}-${strategy.endDate.replaceAll(" ", "")}`
+                      }
+                      formatDate={formatDate}
+                    />
+                  ))}
                 </div>
               </div>
             ),
           )}
 
-          {/* --- Minimal Summary Dashboard --- */}
-          <div>
-            <div className="bg-gray-50 rounded-[40px] p-4 border border-gray-100" style={{ padding: 16 }}>
-              <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="text-center md:text-left">
-                  <h2 className="text-2xl font-black text-gray-800 mb-1">
-                    Strategy Overview
-                  </h2>
-                  <p className="text-sm font-bold text-gray-400">
-                    Your optimal 18-day holiday roadmap
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full md:w-auto">
-                  {[
-                    {
-                      label: "Used",
-                      val: `${summary.totalLeaveUsed}d`,
-                      color: "text-red-500",
-                    },
-                    {
-                      label: "Off",
-                      val: `${summary.totalDaysOff}d`,
-                      color: "text-green-600",
-                    },
-                    {
-                      label: "Efficiency",
-                      val: `${summary.efficiency}x`,
-                      color: "text-blue-600",
-                    },
-                    {
-                      label: "Gain",
-                      val: `+${summary.totalDaysOff - summary.totalLeaveUsed}d`,
-                      color: "text-orange-500",
-                    },
-                  ].map((m) => (
+          <div className="p-6 bg-gray-50/30 leave-planner-summary">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="text-center md:text-left">
+                <h2
+                  className="text-2xl font-black mb-1"
+                  style={{ color: "var(--text-main)" }}
+                >
+                  Strategy Overview
+                </h2>
+                <p
+                  className="text-sm font-bold"
+                  style={{ color: "var(--text-soft)" }}
+                >
+                  {lang === "km"
+                    ? "ផែនការសម្រាកល្អបំផុតរបស់អ្នក"
+                    : `Your optimal ${leaveAllowance}-day holiday roadmap`}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 w-full md:w-auto">
+                {[
+                  {
+                    label: lang === "km" ? "ប្រើប្រាស់" : "Used",
+                    val: `${summary.totalLeaveUsed}d`,
+                    color: "text-red-500",
+                  },
+                  {
+                    label: lang === "km" ? "នៅសល់" : "Remaining",
+                    val: `${summary.remaining}d`,
+                    color:
+                      summary.remaining < 0
+                        ? "text-red-600"
+                        : "text-emerald-600",
+                  },
+                  {
+                    label: lang === "km" ? "ថ្ងៃសម្រាក" : "Off",
+                    val: `${summary.totalDaysOff}d`,
+                    color: "text-green-600",
+                  },
+                  {
+                    label: lang === "km" ? "ប្រសិទ្ធភាព" : "Efficiency",
+                    val: `${summary.efficiency}x`,
+                    color: "text-blue-600",
+                  },
+                  {
+                    label: lang === "km" ? "ចំណេញ" : "Gain",
+                    val: `+${summary.totalDaysOff - summary.totalLeaveUsed}d`,
+                    color: "text-orange-500",
+                  },
+                ].map((m) => (
+                  <div
+                    key={m.label}
+                    className="text-center shadow-sm leave-planner-stat p-4"
+                  >
                     <div
-                      key={m.label}
-                      style={{padding: "16px 8px"}}
-                      className="bg-white p-4 rounded-3xl text-center border border-gray-100 shadow-sm"
+                      className="text-[10px] font-black uppercase mb-1 tracking-widest"
+                      style={{ color: "var(--text-soft)" }}
                     >
-                      <div className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">
-                        {m.label}
-                      </div>
-                      <div className={`text-xl font-black ${m.color}`}>
-                        {m.val}
-                      </div>
+                      {m.label}
                     </div>
-                  ))}
-                </div>
+                    <div className={`text-xl font-black ${m.color}`}>
+                      {m.val}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

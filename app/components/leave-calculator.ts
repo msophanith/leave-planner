@@ -14,6 +14,7 @@ export interface LeaveStrategy {
 export function calculateLeaveStrategies(
   year: number,
   events: HolidayEvent[],
+  leaveAllowance: number = 18,
 ): LeaveStrategy[] {
   const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
   const daysInYear = isLeap ? 366 : 365;
@@ -117,7 +118,7 @@ export function calculateLeaveStrategies(
   // Greedy selection
   const selectedStrategies: LeaveStrategy[] = [];
   const usedDates = new Set<string>();
-  let remainingLeave = 18;
+  let remainingLeave = leaveAllowance;
 
   for (const candidate of candidates) {
     if (remainingLeave <= 0) break;

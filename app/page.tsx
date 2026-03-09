@@ -1,8 +1,9 @@
 import Calendar from "./components/calendar";
 
 export const metadata = {
-  title: "Cute Holiday Calendar 2026",
-  description: "A super bubbly and cute calendar of holidays for 2026.",
+  title: "Holiday Buddy - Your Cute Holiday Calendar",
+  description:
+    "A cute and feature-rich holiday calendar for Cambodia and beyond.",
 };
 
 export default function Home() {

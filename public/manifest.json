@@ -1,0 +1,27 @@
+{
+  "name": "Holiday Buddy",
+  "short_name": "HolidayBuddy",
+  "description": "A cute holiday calendar for Cambodia and beyond.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffd6e0",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "640x640",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
