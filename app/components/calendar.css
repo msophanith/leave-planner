@@ -97,24 +97,25 @@
 .shine-effect {
   position: relative;
   overflow: hidden;
+  will-change: transform;
 }
 
 .shine-effect::after {
   content: "";
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: -100%; /* Wider range for fewer updates */
+  left: -100%;
+  width: 300%;
+  height: 300%;
   background: linear-gradient(
     45deg,
     transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
+    rgba(255, 255, 255, 0.05),
+    /* Reduced opacity */ transparent
   );
-  transform: rotate(45deg);
+  transform: rotate(45deg) translateZ(0); /* Hardware accelerate */
   pointer-events: none;
-  animation: shine 6s infinite;
+  animation: shine 12s ease-in-out infinite; /* Slower, simpler timing */
 }
 
 @keyframes shine {

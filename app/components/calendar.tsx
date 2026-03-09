@@ -94,6 +94,8 @@ export default function Calendar() {
     }
   }, [selectedYear, country]);
 
+  const [showCountdown, setShowCountdown] = useState(false);
+
   useEffect(() => {
     fetchHolidays();
   }, [fetchHolidays]);
@@ -224,13 +226,41 @@ export default function Calendar() {
         setViewMode={setViewMode}
         showPlanner={showPlanner}
         setShowPlanner={setShowPlanner}
+        showCountdown={showCountdown}
+        setShowCountdown={setShowCountdown}
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
         setLang={setLang}
       />
 
-      <div className="flex flex-col lg:flex-row gap-8 items-stretch flex-1 min-h-0">
-        <aside className="w-full lg:w-[28%] lg:sticky lg:top-8 animate-slide-left flex flex-col min-h-0">
+      <div className="flex flex-col lg:flex-row gap-8 items-stretch">
+        {/* Overlay for mobile drawer */}
+        {showCountdown && (
+          <button
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] lg:hidden animate-fade-in w-full h-full border-none p-0 cursor-default"
+            onClick={() => setShowCountdown(false)}
+            aria-label="Close drawer"
+          />
+        )}
+
+        <aside
+          className={`
+            fixed lg:static inset-y-0 left-0 w-[85%] max-w-[400px] lg:w-[28%] 
+            bg-white lg:bg-transparent z-[101] lg:z-auto
+            transform ${showCountdown ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            transition-transform duration-300 ease-in-out
+            lg:sticky lg:top-8 flex flex-col p-6 lg:p-0 shadow-2xl lg:shadow-none
+          `}
+        >
+          <div className="flex justify-between items-center mb-6 lg:hidden">
+            <h2 className="text-xl font-black text-pink-600">Event Roadmap</h2>
+            <button
+              onClick={() => setShowCountdown(false)}
+              className="p-2 hover:bg-pink-50 rounded-full transition-colors"
+            >
+              ✕
+            </button>
+          </div>
           <NextHolidayCountdown
             events={apiEvents}
             lang={lang}
@@ -238,7 +268,7 @@ export default function Calendar() {
           />
         </aside>
 
-        <div className="w-full lg:w-[72%] flex-1 flex flex-col min-h-0 relative">
+        <div className="w-full lg:w-[72%] relative">
           <div className="cute-calendar-wrapper">
             <div className="calendar-decorations">
               <span className="blob blob-1"></span>
@@ -256,7 +286,7 @@ export default function Calendar() {
                   ref={calendarRef}
                   plugins={[dayGridPlugin, interactionPlugin]}
                   initialView="dayGridMonth"
-                  height="100%"
+                  height="auto"
                   locales={[kmLocale]}
                   locale={lang}
                   events={displayEvents.map((e) => ({

@@ -47,7 +47,7 @@ export default function CalendarList({
   );
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-8 custom-scrollbar">
+    <div className="px-4 py-4 space-y-8">
       {Object.entries(grouped).map(([month, events]) => (
         <div key={month} className="animate-fade-in relative">
           <div className="text-center md:text-left">

@@ -15,6 +15,8 @@ interface CalendarHeaderProps {
   >;
   readonly showPlanner: boolean;
   readonly setShowPlanner: (show: boolean) => void;
+  readonly showCountdown: boolean;
+  readonly setShowCountdown: (show: boolean) => void;
   readonly darkMode: boolean;
   readonly toggleDarkMode: () => void;
   readonly setLang: React.Dispatch<React.SetStateAction<"en" | "km">>;
@@ -30,6 +32,8 @@ export default function CalendarHeader({
   setViewMode,
   showPlanner,
   setShowPlanner,
+  showCountdown,
+  setShowCountdown,
   darkMode,
   toggleDarkMode,
   setLang,
@@ -53,6 +57,12 @@ export default function CalendarHeader({
           <p className="cute-subtitle">A cute guide to your days off! ✨</p>
         </div>
         <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 mt-4 md:mt-0">
+          <button
+            onClick={() => setShowCountdown(!showCountdown)}
+            className="cute-lang-toggle lg:hidden bg-pink-50 text-pink-600 border-pink-200"
+          >
+            {lang === "km" ? "⭐ បុណ្យបន្ទាប់" : "⭐ Next Holiday"}
+          </button>
           <div className="cute-select-container">
             <select
               value={selectedYear}
