@@ -55,9 +55,10 @@
 }
 
 html {
-  overflow-x: hidden;
   min-height: 100%;
   -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
@@ -73,8 +74,7 @@ body {
   margin: 0;
   padding: 0;
   position: relative;
-  overflow-x: hidden;
-  overflow-y: auto; /* Force vertical scroll availability */
+  overflow-x: clip;
   transition:
     background-color 0.4s ease,
     color 0.4s ease;
@@ -280,7 +280,7 @@ html[data-theme="dark"] body {
     0 4px 0 var(--shadow-theme, #e0e0e0),
     0 8px 24px rgba(0, 0, 0, 0.05);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
   outline: none;
   position: relative;
@@ -431,9 +431,7 @@ html[data-theme="dark"] body {
   top: 0;
   z-index: 10;
   display: inline-block;
-  background: rgba(255, 255, 255, 0.95); /* More opaque, less blur work */
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.98); /* Solid replacement for performance */
   padding: 8px 24px;
   border-radius: 30px;
   font-weight: 900;
@@ -490,8 +488,6 @@ html[data-theme="dark"] body {
   opacity: 0.4; /* Slightly more transparent */
   pointer-events: none;
   z-index: -1;
-  will-change: transform;
-  transform: translateZ(0); /* Hardware accelerate */
 }
 
 .blob-1 {
@@ -585,11 +581,19 @@ html[data-theme="dark"] body {
 
 /* Header Toolbar */
 .fc .fc-toolbar {
-  margin-bottom: 24px !important;
+  margin-bottom: 16px !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+@media (min-width: 640px) {
+  .fc .fc-toolbar {
+    margin-bottom: 24px !important;
+  }
 }
 
 .fc-toolbar-title {
-  font-size: 26px !important;
+  font-size: clamp(16px, 4vw, 26px) !important;
   font-weight: 900 !important;
   color: var(--cute-pink-dark) !important;
   font-family: var(--font-khmer), var(--font-nunito), sans-serif !important;
@@ -664,7 +668,13 @@ html[data-theme="dark"] body {
   border-radius: 12px !important;
   border: 2px solid #e4e4e7 !important;
   overflow: hidden !important;
-  min-height: 80px !important; /* Reduced min-height */
+  min-height: 56px !important;
+}
+
+@media (min-width: 640px) {
+  .fc-daygrid-day {
+    min-height: 80px !important;
+  }
 }
 
 [data-theme="dark"] .fc-daygrid-day {
@@ -682,13 +692,18 @@ html[data-theme="dark"] body {
   position: relative;
 }
 
-/* Day Numbers */
 .fc-daygrid-day-number {
-  font-size: 14px !important;
+  font-size: clamp(10px, 2.5vw, 14px) !important;
   font-weight: 800 !important;
   color: var(--text-soft) !important;
-  padding: 6px 10px !important; /* Smaller padding */
+  padding: 4px 6px !important;
   text-decoration: none !important;
+}
+
+@media (min-width: 640px) {
+  .fc-daygrid-day-number {
+    padding: 6px 10px !important;
+  }
 }
 
 /* Holidays Highlight */
@@ -743,11 +758,20 @@ html[data-theme="dark"] body {
 .cute-event {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px; /* Compact padding */
+  gap: 2px;
+  padding: 2px 4px;
   border-radius: 12px;
   cursor: pointer;
   transition: transform 0.2s;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .cute-event {
+    gap: 4px;
+    padding: 4px 8px;
+  }
 }
 
 .cute-event:hover {
@@ -759,11 +783,12 @@ html[data-theme="dark"] body {
 }
 
 .cute-event-label {
-  font-size: 11px;
+  font-size: clamp(9px, 2vw, 11px);
   font-weight: 850;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Theme Colors */
@@ -1093,10 +1118,10 @@ html[data-theme="dark"] body {
    PREMIUM HOLIDAY MODAL
 ────────────────────────────────────── */
 .cute-modal-premium {
-  width: 95%;
-  max-width: 580px;
+  width: min(95vw, 580px);
   min-height: 240px;
-  border-radius: 48px;
+  height: auto;
+  border-radius: 36px;
   position: relative;
   overflow: hidden;
   box-shadow:
@@ -1105,6 +1130,12 @@ html[data-theme="dark"] body {
     inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   animation: modalSlideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   border-bottom: 14px solid var(--modal-accent-dark, #e2e8f0);
+}
+
+@media (min-width: 540px) {
+  .cute-modal-premium {
+    border-radius: 48px;
+  }
 }
 
 [data-theme="dark"] .cute-modal-premium {
@@ -1116,16 +1147,26 @@ html[data-theme="dark"] body {
 }
 
 .cute-modal-date-sidebar {
-  width: 140px;
   flex-shrink: 0;
   background: white;
-  border-radius: 40px;
+  border-radius: 28px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  padding: 30px 0;
+  gap: 12px;
+  padding: 16px 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+@media (min-width: 540px) {
+  .cute-modal-date-sidebar {
+    width: 140px;
+    flex-direction: column;
+    gap: 0;
+    border-radius: 40px;
+    padding: 30px 0;
+  }
 }
 
 [data-theme="dark"] .cute-modal-date-sidebar {

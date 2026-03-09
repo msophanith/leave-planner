@@ -97,7 +97,7 @@
 .shine-effect {
   position: relative;
   overflow: hidden;
-  will-change: transform;
+  /* Removed will-change: transform to prevent massive compositor layer memory usage on large cards */
 }
 
 .shine-effect::after {
@@ -114,8 +114,7 @@
     /* Reduced opacity */ transparent
   );
   transform: rotate(45deg) translateZ(0); /* Hardware accelerate */
-  pointer-events: none;
-  animation: shine 12s ease-in-out infinite; /* Slower, simpler timing */
+  /* Removed continuous rotation animation to solve massive scroll jank */
 }
 
 @keyframes shine {
@@ -158,13 +157,22 @@
   border-radius: 40px;
   border: 8px solid white;
   box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
-  width: 600px;
-  height: 320px;
+  width: min(95vw, 600px);
+  height: auto;
+  min-height: 0;
   position: relative;
   overflow: hidden;
   display: flex;
+  flex-direction: column;
   margin: 0;
   padding: 0;
+}
+
+@media (min-width: 540px) {
+  .cute-modal-premium {
+    flex-direction: row;
+    height: 320px;
+  }
 }
 
 /* Custom Scrollbar */

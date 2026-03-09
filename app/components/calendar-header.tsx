@@ -50,13 +50,13 @@ export default function CalendarHeader({
   const darkModeLabel = darkMode ? lightModeLabel : darkModeIconLabel;
 
   return (
-    <header className="cute-header glass-card p-6 mb-6 rounded-md animate-slide-down">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+    <header className="cute-header glass-card p-4 sm:p-6 mb-6 rounded-md animate-slide-down">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="text-left">
           <h1 className="cute-title">Holidays Buddy ✿</h1>
           <p className="cute-subtitle">A cute guide to your days off! ✨</p>
         </div>
-        <div className="flex flex-wrap items-center justify-center md:justify-end gap-3 mt-4 md:mt-0">
+        <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0 md:justify-end">
           <button
             onClick={() => setShowCountdown(!showCountdown)}
             className="cute-lang-toggle lg:hidden bg-pink-50 text-pink-600 border-pink-200"

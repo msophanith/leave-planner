@@ -116,21 +116,21 @@ export default function StrategyCard({
         className="relative w-full flex flex-col group shadow-lg transition-all duration-500"
         style={{ background: pal.bg }}
       >
-        <div className="p-8 flex flex-col gap-6 border-4 border-white relative overflow-hidden">
+        <div className="p-4 sm:p-8 flex flex-col gap-4 sm:gap-6 border-4 border-white relative overflow-hidden">
           <span
-            className="absolute top-4 right-12 text-2xl animate-pulse"
+            className="absolute top-4 right-8 sm:right-12 text-2xl animate-pulse"
             style={{ color: "#f9a8d4" }}
           >
             ✦
           </span>
           <span
-            className="absolute bottom-24 left-6 text-xl"
+            className="absolute bottom-24 left-4 sm:left-6 text-xl hidden sm:block"
             style={{ color: "#bfdbfe" }}
           >
             ✦
           </span>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
             <div
               className="w-20 h-20 flex flex-col items-center justify-center shadow-inner border-4 border-dashed group-hover:rotate-6 transition-transform duration-500"
               style={{
@@ -151,9 +151,9 @@ export default function StrategyCard({
                 {getDayOfMonth(strategy.startDate)}
               </span>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex flex-col items-center sm:items-start">
               <h3
-                className="text-xl font-black leading-tight tracking-tight"
+                className="text-lg sm:text-xl font-black leading-tight tracking-tight px-2 sm:px-0"
                 style={{ color: "#1f2937" }}
               >
                 {strategy.holidaysIncluded.join(" + ")}
@@ -173,9 +173,9 @@ export default function StrategyCard({
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-4 px-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 px-0 sm:px-2">
             <div
-              className="flex-1 bg-white p-5 flex flex-col items-center shadow-sm border-4 border-dashed group-hover:scale-105 transition-transform duration-500"
+              className="w-full sm:flex-1 bg-white p-4 sm:p-5 flex flex-col items-center shadow-sm border-4 border-dashed group-hover:scale-105 transition-transform duration-500"
               style={{ borderColor: "#d1fae5" }}
             >
               <span
@@ -192,16 +192,16 @@ export default function StrategyCard({
               </span>
             </div>
             <div
-              className="text-2xl font-black animate-bounce rotate-90 sm:rotate-0"
+              className="text-xl sm:text-2xl font-black animate-bounce rotate-90 sm:rotate-0 my-1 sm:my-0"
               style={{ color: "#fbcfe8" }}
             >
               ➔
             </div>
             <div
-              className="flex-1 p-5 flex flex-col items-center shadow-lg border-4 border-white group-hover:scale-105 transition-transform duration-500"
+              className="w-full sm:flex-1 p-4 sm:p-5 flex flex-col items-center shadow-lg border-4 border-white group-hover:scale-105 transition-transform duration-500"
               style={{ backgroundColor: "#ec4899" }}
             >
-              <span className="text-[28px] font-black text-white leading-none mb-1.5">
+              <span className="text-[24px] sm:text-[28px] font-black text-white leading-none mb-1.5">
                 {strategy.totalBreakDays}d
               </span>
               <span className="text-[10px] font-black text-white/70 uppercase tracking-tighter">
@@ -243,12 +243,12 @@ export default function StrategyCard({
           </p>
 
           <div
-            className="p-6 flex flex-col gap-5 border-4 border-white shadow-inner"
+            className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-5 border-4 border-white shadow-inner"
             style={{
               backgroundColor: "rgba(249, 250, 251, 0.7)",
             }}
           >
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 sm:px-2 text-center sm:text-left">
               <div className="flex items-center gap-4">
                 <div
                   className="w-12 h-12 bg-white flex items-center justify-center text-2xl shadow-sm border-2 group-hover:rotate-12 transition-transform"
@@ -284,11 +284,11 @@ export default function StrategyCard({
               </button>
             </div>
 
-            <div className="flex items-center gap-3 wanderlust-actions">
+            <div className="flex items-center gap-2 sm:gap-3 wanderlust-actions mt-2 sm:mt-0">
               <button
                 type="button"
                 onClick={(e) => onShare(e, cardId)}
-                className="flex-1 flex items-center justify-center gap-2 text-white py-4 text-[13px] font-black transition-all shadow-md active:scale-95 cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-2 text-white py-3 sm:py-4 text-[12px] sm:text-[13px] font-black transition-all shadow-md active:scale-95 cursor-pointer"
                 style={{ backgroundColor: "#34d399" }}
               >
                 💬 {lang === "km" ? "ចែករំលែក" : "Share"}
@@ -306,7 +306,7 @@ export default function StrategyCard({
             </div>
           </div>
         </div>
-        <div className="absolute -right-6 -top-6 text-6xl opacity-90 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000 select-none z-20">
+        <div className="absolute -right-6 -top-6 text-5xl sm:text-6xl opacity-90 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-1000 select-none z-20">
           {pal.emoji}
         </div>
       </div>

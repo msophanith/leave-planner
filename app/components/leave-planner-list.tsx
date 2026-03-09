@@ -88,6 +88,64 @@ export default function LeavePlannerList({
       opts ?? { month: "short", day: "numeric" },
     );
 
+  const sanitizeCloneStyles = (clonedDoc: Document, cardId: string) => {
+    const el = clonedDoc.getElementById(`strategy-card-${cardId}`);
+    if (!el) return;
+
+    // 🛑 DEEP COLOR SANITIZATION
+    // html2canvas crashes on lab(), oklch(), etc.
+    const sanitize = (val: string) => {
+      if (!val) return val;
+      const unsupported = ["lab(", "oklch(", "oklab(", "lch("];
+      if (unsupported.some((chunk) => val.includes(chunk))) {
+        return "#71717a"; // Safe gray fallback
+      }
+      return val;
+    };
+
+    const allElements = el.querySelectorAll("*");
+    for (const item of Array.from(allElements)) {
+      const htmlItem = item as HTMLElement;
+      const computed = globalThis.getComputedStyle(htmlItem);
+
+      const color = sanitize(computed.color);
+      if (color !== computed.color) {
+        htmlItem.style.setProperty("color", color, "important");
+      }
+
+      const bg = sanitize(computed.backgroundColor);
+      if (bg !== computed.backgroundColor) {
+        htmlItem.style.setProperty("background-color", bg, "important");
+      }
+
+      const border = sanitize(computed.borderColor);
+      if (border !== computed.borderColor) {
+        htmlItem.style.setProperty("border-color", border, "important");
+      }
+
+      const shadow = sanitize(computed.boxShadow);
+      if (shadow !== computed.boxShadow) {
+        htmlItem.style.setProperty("box-shadow", "none", "important");
+      }
+    }
+
+    // Hide action buttons in the clone
+    const actions = el.querySelectorAll(".wanderlust-actions");
+    for (const a of Array.from(actions)) {
+      (a as HTMLElement).style.display = "none";
+    }
+
+    // Remove animations
+    const animated = el.querySelectorAll(
+      ".animate-pulse, .animate-ping, .animate-bounce",
+    );
+    for (const a of Array.from(animated)) {
+      const h = a as HTMLElement;
+      h.style.animation = "none";
+      h.classList.remove("animate-pulse", "animate-ping", "animate-bounce");
+    }
+  };
+
   const handleShare = async (e: React.MouseEvent, cardId: string) => {
     e.stopPropagation();
     try {
@@ -100,67 +158,7 @@ export default function LeavePlannerList({
         backgroundColor: null,
         scale: 2,
         logging: false,
-        onclone: (clonedDoc) => {
-          const el = clonedDoc.getElementById(`strategy-card-${cardId}`);
-          if (el) {
-            // 🛑 DEEP COLOR SANITIZATION
-            // html2canvas crashes on lab(), oklch(), etc.
-            const allElements = el.querySelectorAll("*");
-            const sanitize = (val: string) => {
-              if (!val) return val;
-              const unsupported = ["lab(", "oklch(", "oklab(", "lch("];
-              if (unsupported.some((chunk) => val.includes(chunk))) {
-                return "#71717a"; // Safe gray fallback
-              }
-              return val;
-            };
-
-            for (const item of Array.from(allElements)) {
-              const htmlItem = item as HTMLElement;
-              const computed = globalThis.getComputedStyle(htmlItem);
-
-              const color = sanitize(computed.color);
-              if (color !== computed.color) {
-                htmlItem.style.setProperty("color", color, "important");
-              }
-
-              const bg = sanitize(computed.backgroundColor);
-              if (bg !== computed.backgroundColor) {
-                htmlItem.style.setProperty("background-color", bg, "important");
-              }
-
-              const border = sanitize(computed.borderColor);
-              if (border !== computed.borderColor) {
-                htmlItem.style.setProperty("border-color", border, "important");
-              }
-
-              const shadow = sanitize(computed.boxShadow);
-              if (shadow !== computed.boxShadow) {
-                htmlItem.style.setProperty("box-shadow", "none", "important");
-              }
-            }
-
-            // Hide action buttons in the clone
-            const actions = el.querySelectorAll(".wanderlust-actions");
-            for (const a of Array.from(actions)) {
-              (a as HTMLElement).style.display = "none";
-            }
-
-            // Remove animations
-            const animated = el.querySelectorAll(
-              ".animate-pulse, .animate-ping, .animate-bounce",
-            );
-            for (const a of Array.from(animated)) {
-              const h = a as HTMLElement;
-              h.style.animation = "none";
-              h.classList.remove(
-                "animate-pulse",
-                "animate-ping",
-                "animate-bounce",
-              );
-            }
-          }
-        },
+        onclone: (clonedDoc) => sanitizeCloneStyles(clonedDoc, cardId),
       });
 
       const url = canvas.toDataURL("image/png");
@@ -174,10 +172,7 @@ export default function LeavePlannerList({
   };
 
   return (
-    <div
-      className="absolute inset-0 z-200 flex items-center justify-center p-4 sm:p-8 lg:p-12"
-      style={{ padding: 16 }}
-    >
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 lg:p-8">
       {/* Backdrop */}
       <button
         type="button"
@@ -186,28 +181,20 @@ export default function LeavePlannerList({
         aria-label={lang === "km" ? "បិទ" : "Close"}
       />
 
-      <div
-        className="relative w-full max-w-7xl max-h-[85vh] flex flex-col overflow-hidden font-nunito bg-white shadow-2xl leave-planner-panel"
-        style={{ margin: "0 16px" }}
-      >
+      <div className="relative w-full max-w-7xl h-[95vh] sm:max-h-[85vh] sm:h-auto flex flex-col overflow-hidden font-nunito bg-white shadow-2xl leave-planner-panel rounded-3xl sm:rounded-[36px]">
         {/* Top Bar */}
-        <div
-          className="flex items-center justify-between shrink-0 leave-planner-topbar"
-          style={{ padding: 16 }}
-        >
-          <div className="flex items-center gap-4">
-            <span className="text-3xl">🤖</span>
-            <div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 leave-planner-topbar p-4 sm:p-6 gap-4 relative">
+          <div className="flex items-center gap-3 sm:gap-4 w-full pr-10 sm:pr-0">
+            <span className="text-3xl hidden sm:inline-block">🤖</span>
+            <div className="flex-1 min-w-0">
               <h2
-                className="text-xl font-black tracking-tight"
+                className="text-lg sm:text-xl font-black tracking-tight"
                 style={{ color: "var(--text-main)" }}
               >
-                {lang === "km"
-                  ? "ជំនួយការសម្រាកប្រចាំឆ្នាំ"
-                  : "AI Leave Assistant"}
+                {lang === "km" ? "ជំនួយការសម្រាកប្រចាំឆ្នាំ" : "AI Leave Assistant"}
               </h2>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <span className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                   {lang === "km" ? "ថ្ងៃ AL:" : "AL Budget:"}
                 </span>
                 <input
@@ -216,7 +203,7 @@ export default function LeavePlannerList({
                   max={30}
                   value={leaveAllowance}
                   onChange={(e) => setLeaveAllowance(Number(e.target.value))}
-                  className="w-20 accent-pink-400 cursor-pointer"
+                  className="w-16 sm:w-20 accent-pink-400 cursor-pointer"
                   aria-label="Annual leave allowance"
                 />
                 <input
@@ -228,28 +215,25 @@ export default function LeavePlannerList({
                     const v = Math.max(1, Math.min(60, Number(e.target.value)));
                     setLeaveAllowance(v);
                   }}
-                  className="w-12 text-center text-sm font-black text-pink-600 border-2 border-pink-200 outline-none focus:border-pink-400 transition-colors"
+                  className="w-12 text-center text-xs sm:text-sm font-black text-pink-600 border-2 border-pink-200 outline-none focus:border-pink-400 rounded-lg transition-colors"
                   aria-label="Annual leave days"
                 />
-                <span className="text-[11px] font-bold text-gray-400">
-                  {lang === "km" ? "ថ្ងៃ" : "days"}
-                </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
             <button
               onClick={handleExport}
               disabled={exporting || strategies.length === 0}
-              className="cute-export-btn"
+              className="cute-export-btn flex-1 sm:flex-none text-sm px-4 py-2"
               title="Export to .ics calendar file"
             >
-              {exporting ? "⏳" : "📅"}{" "}
-              {lang === "km" ? "នាំចេញ .ics" : "Export .ics"}
+              {exporting ? "⏳" : "📅"} {lang === "km" ? "នាំចេញ .ics" : "Export .ics"}
             </button>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 transition-colors bg-red-400 text-white"
+              className="absolute top-4 right-4 sm:static sm:top-auto sm:right-auto w-8 h-8 flex items-center justify-center hover:bg-red-50 sm:hover:bg-gray-100 transition-colors bg-red-100 sm:bg-red-400 text-red-500 sm:text-white rounded-full sm:rounded-lg font-black shrink-0"
+              aria-label="Close"
             >
               ✕
             </button>
@@ -257,10 +241,7 @@ export default function LeavePlannerList({
         </div>
 
         {/* Scrollable Content */}
-        <div
-          className="flex-1 overflow-y-auto space-y-12 custom-scrollbar leave-planner-scroll"
-          style={{ padding: 24 }}
-        >
+        <div className="flex-1 overflow-y-auto space-y-8 sm:space-y-12 custom-scrollbar leave-planner-scroll p-4 sm:p-6 lg:p-8">
           {Object.entries(groupedStrategies).map(
             ([monthYear, monthStrategies]) => (
               <div key={monthYear} className="space-y-6">

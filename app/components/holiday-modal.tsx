@@ -6,9 +6,9 @@ import confetti from "canvas-confetti";
 import { HolidayEvent } from "./calendar-data";
 
 interface ModalProps {
-  event: HolidayEvent;
-  onClose: () => void;
-  lang: "en" | "km";
+  readonly event: HolidayEvent;
+  readonly onClose: () => void;
+  readonly lang: "en" | "km";
 }
 
 export default function HolidayModal({ event, onClose, lang }: ModalProps) {
@@ -81,16 +81,16 @@ export default function HolidayModal({ event, onClose, lang }: ModalProps) {
           ✕
         </button>
 
-        <div className="flex w-full h-full items-stretch p-4 gap-6">
-          {/* Left Date Block */}
-          <div className="cute-modal-date-sidebar">
+        <div className="flex w-full h-full items-stretch p-4 gap-6 flex-col sm:flex-row">
+          {/* Date Block — horizontal strip on mobile, sidebar on sm+ */}
+          <div className="cute-modal-date-sidebar sm:flex-col flex-row items-center justify-center gap-4 sm:gap-0 py-4 sm:py-8 px-6 sm:px-0 rounded-3xl sm:rounded-[40px] min-w-0 sm:min-w-[140px]">
             <span className="month">{month}</span>
-            <span className="day">{day}</span>
+            <span className="day text-5xl sm:text-[64px]">{day}</span>
             <span className="weekday">{weekday}</span>
           </div>
 
           {/* Right Content Area */}
-          <div className="flex-1 flex flex-col items-start justify-center min-w-0 pr-8">
+          <div className="flex-1 flex flex-col items-start justify-center min-w-0 pr-2 sm:pr-8 pb-2 sm:pb-0">
             {event.primaryType && (
               <span className="cute-modal-type-badge-premium">
                 {event.primaryType}
@@ -98,7 +98,7 @@ export default function HolidayModal({ event, onClose, lang }: ModalProps) {
             )}
 
             <h3
-              className="cute-modal-title-premium"
+              className="cute-modal-title-premium text-2xl sm:text-[32px]"
               style={{
                 fontFamily: lang === "km" ? "var(--font-khmer)" : "inherit",
               }}
@@ -107,7 +107,7 @@ export default function HolidayModal({ event, onClose, lang }: ModalProps) {
             </h3>
 
             {event.description && (
-              <p className="cute-modal-description-premium line-clamp-2">
+              <p className="cute-modal-description-premium line-clamp-2 text-sm sm:text-[17px]">
                 {event.description}
               </p>
             )}
@@ -128,8 +128,8 @@ export default function HolidayModal({ event, onClose, lang }: ModalProps) {
             </div>
           </div>
 
-          {/* Floating Emoji */}
-          <div className="cute-modal-emoji-premium">{event.emoji}</div>
+          {/* Floating Emoji — hidden on mobile to prevent overflow */}
+          <div className="cute-modal-emoji-premium hidden sm:block">{event.emoji}</div>
         </div>
       </dialog>
     </div>
