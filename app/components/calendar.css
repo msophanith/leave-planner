@@ -107,6 +107,7 @@
   left: -100%;
   width: 300%;
   height: 300%;
+  pointer-events: none;
   background: linear-gradient(
     45deg,
     transparent,
